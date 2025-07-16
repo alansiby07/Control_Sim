@@ -67,9 +67,9 @@ wheel_speed = -np.cumsum(torque) * (t[1] - t[0]) / i_rw
 
 #--------------Root Locus Transfer Function----------------
 
-num = [k2, k1]
-den = [i_sc, k2, k1]
-sys = ctrl.TransferFunction(num, den)
+numerator = [k2, k1]
+denominator = [i_sc, k2, k1]
+sys = ctrl.TransferFunction(numerator, denominator)
 
 
 
@@ -105,7 +105,7 @@ def plot_time_domain(t, theta, ang_vel, torque):
     
     #Title, Layout
     plt.tight_layout()
-    plt.suptitle("1-Axis Spacecraft with PD Control (State-Space)", fontsize=16, y=1.02)
+    plt.suptitle("1-Axis Spacecraft with Control (State-Space)", fontsize=16, y=1.02)
     plt.show()
 
 
@@ -116,7 +116,7 @@ def plot_root_locus(sys):
     plt.figure()
 
     ctrl.root_locus(sys, plot=True, grid=True)
-    plt.title("Root Locus of PD-Controlled System")
+    plt.title("Root Locus of Controlled System")
     plt.show()
 
 
