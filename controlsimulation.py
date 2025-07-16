@@ -60,9 +60,9 @@ torq_max = 0.05  # To be adjusted by user
 torque = np.clip(torque, -torq_max, torq_max)
 
 #Reaction Wheel Speed Calc
-
+max_wheel_speed = 3000 * 2 * np.pi / 60   #RPM * (1 rev/60 secs)
 wheel_speed = -np.cumsum(torque) * (t[1] - t[0]) / i_rw
-
+wheel_speed = np.clip(wheel_speed, -max_wheel_speed, max_wheel_speed)
 
 
 #--------------Root Locus Transfer Function----------------
@@ -120,11 +120,59 @@ def plot_root_locus(sys):
     plt.show()
 
 
+
+def analysis(t, theta):
+    final_theta = theta[-1]
+    peak_theta = np.max(theta)
+    overshoot_rad = peak_theta - final_theta
+
+    theta_deg = np.rad2deg(theta)
+    final_deg = np.rad2deg(final_theta)
+    overshoot_deg = np.rad2deg(overshoot_rad)
+
+
+    tolerance = 0.02 * np.abs(final_theta)
+    within_band = np.abs(theta - final_theta) < tolerance
+
+    last_out_band = np.where(~within_band)[0]
+
+    if len(last_out_band) == 0:
+        settling_time = 0.0
+        settle_index = 0
+    else:
+        settle_index = last_out_band[-1] + 1
+        settling_time = t[settle_index] if settle_index < len(t) else np.nan
+
+
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(t, theta_deg, label='θ(t) [deg]', color = 'blue')
+    plt.axhline(final_deg, linestyle='--', color='gray', label='Final Value')
+    plt.axhline(final_deg, linestyle=':', color='green', label='±2%')
+    plt.axhline(final_deg, linestyle=':', color='green', label='Final Value')
+
+    peak_time = t[np.argmax(theta)]
+    plt.plot(peak_time, np.rad2deg(peak_theta), 'ro', label='Overshoot Peak')
+
+    plt.axvline(settling_time, linestyle='--', color='red', label='Settling Time')
+    plt.text(settling_time, theta_deg[settle_index], f'Settling Time = {settling_time:.2f}s', color='red', 
+             va='bottom', ha='right')
+    
+    plt.title('Angular Response with Overshoot & Settling Time')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Angle (deg)')
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+
+    plt.show()
+
 #Plots both the time_domain plots and the root locus plot
 
 def plot_all(t, theta, ang_vel, torque, sys):
     plot_time_domain(t, theta, ang_vel, torque)
     plot_root_locus(sys)
+    analysis(t, theta)
 
 
 
