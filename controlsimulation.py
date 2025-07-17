@@ -58,6 +58,19 @@ ang_vel = (A * lam1 * np.exp(lam1 * t)) + (B * lam2 * np.exp(lam2 * t))
 torque = (-k1 * theta) - (k2 * ang_vel)
 torq_max = 0.05  # To be adjusted by user
 torque = np.clip(torque, -torq_max, torq_max)
+t_change = t[1] - t[0]
+
+
+#-------------Angular Acceleration of Reaction Wheel----------------
+
+
+rw_acc = torque / i_rw
+max_acc = 10.0 #VARIABLE
+
+#Applies the reaction wheel acceleration to the wheel speed
+wheel_speed = -np.cumsum(rw_acc * t_change)
+
+
 
 #Reaction Wheel Speed Calc
 max_wheel_speed = 3000 * 2 * np.pi / 60   #RPM * (1 rev/60 secs)
@@ -119,7 +132,7 @@ def plot_root_locus(sys):
     plt.title("Root Locus of Controlled System")
     plt.show()
 
-
+#Plots a graph for the Overshoot and Settling Time
 
 def analysis(t, theta):
     final_theta = theta[-1]
@@ -148,8 +161,8 @@ def analysis(t, theta):
     plt.figure(figsize=(10, 6))
     plt.plot(t, theta_deg, label='θ(t) [deg]', color = 'blue')
     plt.axhline(final_deg, linestyle='--', color='gray', label='Final Value')
-    plt.axhline(final_deg, linestyle=':', color='green', label='±2%')
-    plt.axhline(final_deg, linestyle=':', color='green', label='Final Value')
+    plt.axhline(final_deg + tolerance, linestyle=':', color='green', label='±2%')
+    plt.axhline(final_deg - tolerance, linestyle=':', color='green')
 
     peak_time = t[np.argmax(theta)]
     plt.plot(peak_time, np.rad2deg(peak_theta), 'ro', label='Overshoot Peak')
@@ -173,6 +186,25 @@ def plot_all(t, theta, ang_vel, torque, sys):
     plot_time_domain(t, theta, ang_vel, torque)
     plot_root_locus(sys)
     analysis(t, theta)
+
+def valid_gains_finder(k1_range, k2_range, t, initial_theta, initial_vel, i_sc, torq_max):
+    valid_gains = []
+
+    for k1 in range k1_range:
+        for k2 in k2_range:
+            a = 1
+            b = k2/i_sc
+            c = k1/i_sc
+
+            discriminant = np.abs(b**2.0 - 4.0 * a * c)
+
+            lam1 = (-b + np.sqrt(discriminant)) / 2
+            lam2 = (-b - np.sqrt(discriminant)) / 2
+            A = (initial_vel - (initial_theta * lam2)) / (lam1 - lam2)
+            B = initial_theta - A
+
+            theta = (A * np.exp(lam1 * t)) + (B * np.exp(lam2 * t))
+            ang_vel = (A * lam1 * np.exp(lam1 * t)) + (B * lam2 * np.exp(lam2 * t))
 
 
 
