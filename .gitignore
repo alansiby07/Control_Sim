@@ -4,10 +4,13 @@ venv/
 __pycache__/
 *.pyc
 
-# (optional) Ignore common OS/editor files
+# Ignore common OS/editor files
 .DS_Store
 *.swp
 *.swo
 .idea/
 .vscode/
+
+logs/
+plots/
 
